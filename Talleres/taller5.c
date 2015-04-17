@@ -1,4 +1,5 @@
 /**
+ *
  * Taller: Modificar el taller 4 para que el proceso padre imprima el
  * número que es retornado por cada hilo.
  * 
