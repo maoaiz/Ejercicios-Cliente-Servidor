@@ -1,4 +1,5 @@
 /**
+ *
  * Taller: Modificar el taller 2, para que utilizando señales, el 
  * proceso padre imprima el código de salida de los dos procesos hijos
  * 
