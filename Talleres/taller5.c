@@ -1,5 +1,8 @@
 /**
+<<<<<<< HEAD
  *
+=======
+>>>>>>> 6a166a1af6b10ea1f0a5ae3451e0b51ce9932749
  * Taller: Modificar el taller 4 para que el proceso padre imprima el
  * número que es retornado por cada hilo.
  * 
