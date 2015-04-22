@@ -36,12 +36,13 @@
 #define MAXDATASIZE 100 // máximo número de bytes que se pueden leer de una vez 
 
 
-void delete_files(char * buf){
+char * delete_files(char * buf){
     printf("%s\n",buf);
     printf("Escriba el nombre del archivo a eliminar: ");
-    char name[30];
+    char *name = (char *)malloc(sizeof(char) * 30);
     scanf("%s",&name);
-    printf("El archivo a borrar es: %s\n\n", name);
+    printf("El archivo a borrar es: %s\n\n", &name);
+    return name;
 }
 
 
@@ -136,7 +137,10 @@ int main(int argc, char *argv[])
             printf("%s\n",buf);
             break;
         case 3: printf("Listado de Archivos a Eliminar\n");
-            delete_files(buf);
+            char *name2 = (char *)malloc(sizeof(char) * 30);
+            name2 = delete_files(buf);
+            // printf("El archivo %s ha sido borrado. \n", &name2);
+            //crear el comando 3#name2
             break;
         default: printf("[ERROR] no se especificó una operación válida\n");
     }
