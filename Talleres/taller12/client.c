@@ -35,6 +35,16 @@
 
 #define MAXDATASIZE 100 // máximo número de bytes que se pueden leer de una vez 
 
+
+void delete_files(char * buf){
+    printf("%s\n",buf);
+    printf("Escriba el nombre del archivo a eliminar: ");
+    char name[30];
+    scanf("%s",&name);
+    printf("El archivo a borrar es: %s\n\n", name);
+}
+
+
 int main(int argc, char *argv[])
 {
     int sockfd, numbytes;  
@@ -43,6 +53,7 @@ int main(int argc, char *argv[])
     struct hostent *he;
     struct sockaddr_in their_addr; // información de la dirección de destino 
     char op[1], str1[10];
+    char opt[1];
     //printf("argc: %d", argc);
 
     if (argc != 2) {
@@ -87,18 +98,25 @@ int main(int argc, char *argv[])
     printf("\nSu opción:");
     scanf("%s", &op);
     printf("\n");
-    
-    if (atoi(op) == 2 || atoi(op) == 3){
+
+
+    if (atoi(op) == 2 ){
         printf("\nIngrese la ruta del archivo: ");
         scanf("%s", &str1);
     }else{
         strcpy(str1, "-");
-    }
-    
-    strcat(command, op);
+        if (atoi(op) == 3 ){
+            strcpy(opt, "1");
+            // printf("op ==3; %s\n", op);
+        }else{
+            strcpy(opt, op);
+            // printf("else; %s\n", op);
+        }
+    }    
+    strcat(command, opt);
     strcat(command, "#");
     strcat(command, str1);
-    //printf("comando enviado: %s\n", command);
+    printf("comando enviado: %s\ntmp:%s", command);
     
     if (send(sockfd, command, 14, 0) == -1)
         perror("send");
@@ -112,16 +130,16 @@ int main(int argc, char *argv[])
 
     switch(atoi(op)){
         case 1: printf("Lista de archivos:\n");
+            printf("%s\n",buf);
             break;
         case 2: printf("Archivo subido correctamente\n");
+            printf("%s\n",buf);
             break;
-        case 3: printf("Archivo eliminado correctamente\n");
+        case 3: printf("Listado de Archivos a Eliminar\n");
+            delete_files(buf);
             break;
         default: printf("[ERROR] no se especificó una operación válida\n");
     }
-
-    printf("%s\n",buf);
-    
     close(sockfd);
 
     return 0;
