@@ -36,12 +36,17 @@
 #define MAXDATASIZE 100 // máximo número de bytes que se pueden leer de una vez 
 
 
-char * delete_files(char * buf){
-    printf("%s\n",buf);
+char * get_file_name_to_delete(char * buf){
+    /* En buf está el resultado de solicitar listar archivos.
+    Se imprime el listado de archivos para mostrar cuales son
+    los posibles archivos a eliminar */
+    printf("%s\n", buf);
+
     printf("Escriba el nombre del archivo a eliminar: ");
     char *name = (char *)malloc(sizeof(char) * 30);
-    scanf("%s",&name);
-    printf("El archivo a borrar es: %s\n\n", &name);
+    scanf("%s", name);
+
+    printf("El archivo a borrar es: %s\n\n", name);
     return name;
 }
 
@@ -91,7 +96,7 @@ int main(int argc, char *argv[])
 
     printf("Conected: %s", buf);
     //printf("comando enviado: %s\n", argv[2]);
-    //id_operacion#num1#num2
+    //id_operacion#nombre-archivo-a-eliminar
     
     printf("****************************\n");
     printf("    Escoja una opción\n\n");
@@ -113,21 +118,36 @@ int main(int argc, char *argv[])
             strcpy(opt, op);
             // printf("else; %s\n", op);
         }
-    }    
+    }
     strcat(command, opt);
     strcat(command, "#");
     strcat(command, str1);
-    printf("comando enviado: %s\ntmp:%s", command);
+    printf("comando enviado: %s\n", command);
     
-    if (send(sockfd, command, 14, 0) == -1)
+    printf("solicitud 1\n");
+    if (send(sockfd, command, 14, 0) == -1){
         perror("send");
+    }
 
     if ((numbytes=recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
         perror("recv");
         exit(1);
     }
+    buf[numbytes] = '\0';
+    printf("BUF:%s\n",buf);
+
+    // printf("\n\nsolicitud 2\n");
+    // if (send(sockfd, command, 14, 0) == -1){
+    //     perror("send");
+    // }
+
+    // if ((numbytes=recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+    //     perror("recv");
+    //     exit(1);
+    // }
 
     buf[numbytes] = '\0';
+    printf("%s\n",buf);
 
     switch(atoi(op)){
         case 1: printf("Lista de archivos:\n");
@@ -138,9 +158,28 @@ int main(int argc, char *argv[])
             break;
         case 3: printf("Listado de Archivos a Eliminar\n");
             char *name2 = (char *)malloc(sizeof(char) * 30);
-            name2 = delete_files(buf);
-            // printf("El archivo %s ha sido borrado. \n", &name2);
-            //crear el comando 3#name2
+            name2 = get_file_name_to_delete(buf);
+
+
+            char *command2 = (char *)malloc(sizeof(char) * MAXDATASIZE);
+            strcat(command2, "3#");
+            strcat(command2, name2);
+
+
+            if (send(sockfd, command2, 50, 0) == -1){
+                perror("send");
+            }
+
+            printf("COMANDO ENVIADO: %s\n", command2);
+
+            if ((numbytes=recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+                perror("recv");
+                exit(1);
+            }
+            buf[numbytes] = '\0';
+            printf("El archivo %s ha sido borrado. \n", name2);
+            printf("%s\n", buf);
+
             break;
         default: printf("[ERROR] no se especificó una operación válida\n");
     }

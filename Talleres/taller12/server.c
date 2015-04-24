@@ -136,21 +136,31 @@ int main(void){
             close(sockfd); // El hijo no necesita este descriptor
             if (send(new_fd, "Bienvenido!\n", 14, 0) == -1)
                 perror("send");
+            int b;
+            b = 1;
+            while(b == 1){
+                if ((numbytes=recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
+                    perror("recv");
+                    exit(1);
+                }
+                if(buf == "exit"){
+                    b=0;
+                    break;
+                }else{
+                    buf[numbytes] = '\0';
+                    printf("COMANDO SOLICITADO: %s\n", buf);
 
-            if ((numbytes=recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
-                perror("recv");
-                exit(1);
+                    char *resp2 = request(buf);
+                    if (resp2 == "error"){
+                        printf("resp2: %s\n", resp2);
+                        resp2 = "[ERROR] No existe esa operación\0";
+                    }
+                    if (send(new_fd, resp2, MAXDATASIZE-1, 0) == -1)
+                        perror("send");
+
+                }
             }
 
-            buf[numbytes] = '\0';
-
-            char *resp2 = request(buf);
-            if (resp2 == "error"){
-                printf("resp2: %s\n", resp2);
-                resp2 = "[ERROR] No existe esa operación\0";
-            }
-            if (send(new_fd, resp2, MAXDATASIZE-1, 0) == -1)
-                perror("send");
             close(new_fd);
             exit(0);
         }

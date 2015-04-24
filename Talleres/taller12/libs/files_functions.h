@@ -38,6 +38,7 @@ char * upload_file(char * path){
 
 
 char * delete_file(char * path){
-    printf("delete_file: %s\n", path);
-    return "delete_file.......... %s", path;
+    printf("ELIMINANDO EL ARCHIVO: %s...............\n", path);
+    //
+    return ("ARCHIVO '%s' ELIMINANDO", path);
 }
