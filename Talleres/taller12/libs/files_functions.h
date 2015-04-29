@@ -1,5 +1,6 @@
 
 #include <dirent.h>
+#include <stdio.h>
 
 
 char * show_dir(char * path){
@@ -39,6 +40,10 @@ char * upload_file(char * path){
 
 char * delete_file(char * path){
     printf("ELIMINANDO EL ARCHIVO: %s...............\n", path);
-    //
-    return ("ARCHIVO '%s' ELIMINANDO", path);
+    char *command = (char *)malloc(sizeof(char) * 100);
+    strcpy(command, "rm -f shared_files/");
+    strcat(command, path);
+    printf("Comando system: %s\n", command);
+    system(command);
+    return "Archivo borrado.";
 }
