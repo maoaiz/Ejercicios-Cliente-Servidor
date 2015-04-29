@@ -45,7 +45,7 @@ void sigchld_handler(int s){
 }
 
 char * request(char buf[]){
-    printf("\n*****************************************\n");
+    printf("\n***************<REQUEST>********************\n");
     printf("El cliente solicita: %s\n", buf);
     
     /* <Decodificar el comando enviado desde el cliente> */
@@ -63,6 +63,10 @@ char * request(char buf[]){
 
     char *resp = (char *)malloc(sizeof(char) * MAXDATASIZE);
     switch(atoi(array[0])){
+        case 0: printf("El cliente quiere irse...\n");
+            resp = "exit";
+            return resp;
+            break;
         case 1: printf("Operación: listar directorio\n");
             resp = show_dir("shared_files");
             break;
@@ -78,7 +82,7 @@ char * request(char buf[]){
     }
     printf("Código de operación: %s\n", array[0]);
     printf("file path: %s\n", array[1]);
-    printf("*****************************************\n");
+    printf("******************</REQUEST>***************\n");
     return resp;
 }
 
@@ -89,7 +93,6 @@ int main(void){
     int sin_size;
     struct sigaction sa;
     int yes=1;
-    char buf[MAXDATASIZE];
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         perror("socket");
@@ -139,28 +142,30 @@ int main(void){
             int b;
             b = 1;
             while(b == 1){
+                char buf[MAXDATASIZE];
+                printf("Escuchando al cliente...\n");
                 if ((numbytes=recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
                     perror("recv");
                     exit(1);
                 }
-                if(buf == "exit"){
-                    b=0;
+                buf[numbytes] = '\0';
+                printf("COMANDO SOLICITADO: %s\n", buf);
+
+                char *resp2 = request(buf);
+                if (resp2 == "exit"){
+                    printf("resp2: %s\n", resp2);
+                    resp2 = "saliendo\0";
                     break;
-                }else{
-                    buf[numbytes] = '\0';
-                    printf("COMANDO SOLICITADO: %s\n", buf);
-
-                    char *resp2 = request(buf);
-                    if (resp2 == "error"){
-                        printf("resp2: %s\n", resp2);
-                        resp2 = "[ERROR] No existe esa operación\0";
-                    }
-                    if (send(new_fd, resp2, MAXDATASIZE-1, 0) == -1)
-                        perror("send");
-
                 }
-            }
+                if (resp2 == "error"){
+                    printf("resp2: %s\n", resp2);
+                    resp2 = "[ERROR] No existe esa operación\0";
+                }
+                if (send(new_fd, resp2, MAXDATASIZE-1, 0) == -1)
+                    perror("send");
 
+            }
+            printf("El hijo ha muerto!\n");
             close(new_fd);
             exit(0);
         }
