@@ -39,6 +39,7 @@
 
 #define MYPORT 3490    // Puerto al que conectarán los usuarios
 #define BACKLOG 10     // Cuántas conexiones pendientes se mantienen en cola
+#define MAX_RESPONSE_SIZE 1000
 
 void sigchld_handler(int s){
     while(wait(NULL) > 0);
@@ -61,27 +62,28 @@ char * request(char buf[]){
     }
     /* </Decodificar el comando enviado desde el cliente> */
 
-    char *resp = (char *)malloc(sizeof(char) * MAXDATASIZE);
+    char *resp = (char *)malloc(sizeof(char) * MAX_RESPONSE_SIZE);
     switch(atoi(array[0])){
         case 0: printf("El cliente quiere irse...\n");
             resp = "exit";
             return resp;
             break;
         case 1: printf("Operación: listar directorio\n");
-            resp = show_dir("shared_files");
+            // resp = show_dir("shared_files");
+            resp = show_dir_with_system("shared_files/");
             break;
         case 2: printf("Operación: subir archivo\n");
             resp = upload_file(array[1]);
             break;
         case 3: printf("Operación: eliminar archivo\n");
-            resp = delete_file(array[1]);
+            strcpy(resp, "shared_files/");
+            strcat(resp, array[1]);
+            resp = delete_file(resp);
             break;
         default: printf("[ERROR] no se especificó una operación válida\n");
             resp = "error";
             return resp;
     }
-    printf("Código de operación: %s\n", array[0]);
-    printf("file path: %s\n", array[1]);
     printf("******************</REQUEST>***************\n");
     return resp;
 }
@@ -151,21 +153,21 @@ int main(void){
                 buf[numbytes] = '\0';
                 printf("COMANDO SOLICITADO: %s\n", buf);
 
-                char *resp2 = request(buf);
-                if (resp2 == "exit"){
-                    printf("resp2: %s\n", resp2);
-                    resp2 = "saliendo\0";
+                char *response = (char *)malloc(sizeof(char) * MAX_RESPONSE_SIZE);
+                response = request(buf);
+                if (response == "exit"){
+                    b = 0;
                     break;
                 }
-                if (resp2 == "error"){
-                    printf("resp2: %s\n", resp2);
-                    resp2 = "[ERROR] No existe esa operación\0";
+                if (response == "error"){
+                    response = "[ERROR] No existe esa operación\0";
                 }
-                if (send(new_fd, resp2, MAXDATASIZE-1, 0) == -1)
+
+                printf("Response: %s\n", response);
+                if (send(new_fd, response, MAX_RESPONSE_SIZE-1, 0) == -1)
                     perror("send");
 
             }
-            printf("El hijo ha muerto!\n");
             close(new_fd);
             exit(0);
         }

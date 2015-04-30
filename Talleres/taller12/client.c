@@ -35,21 +35,49 @@
 
 #define MAXDATASIZE 100 // máximo número de bytes que se pueden leer de una vez 
 
+#define MAX_RESPONSE_SIZE 1000
 
-char * get_file_name_to_delete(char * buf){
+char * get_file_name_to_delete(char * filename_list){
     /* En buf está el resultado de solicitar listar archivos.
     Se imprime el listado de archivos para mostrar cuales son
     los posibles archivos a eliminar */
-    printf("%s\n", buf);
+    printf("%s\n", filename_list);
 
     printf("Escriba el nombre del archivo a eliminar: ");
     char *name = (char *)malloc(sizeof(char) * 30);
     scanf("%s", name);
 
-    printf("El archivo a borrar es: %s\n\n", name);
+    printf("\n\aArchivo a borrar: %s\n\n", name);
     return name;
 }
 
+char * show_menu(){
+    char *op = (char *)malloc(sizeof(char) * 10);
+
+    printf("\n\n***************************\n");
+    printf("    Escoja una opción\n\n");
+    printf("0) Salir\n1) Listar archivos\n2) Subir archivo\n3) Eliminar archivo\n");
+    printf("\nSu opción: ");
+    scanf("%s", op);
+    printf("\n");
+    return op;
+}
+
+char * build_command(char *op){
+    /* Estructura del comando a construir:
+        id_operacion#nombre-archivo-a-eliminar*/
+    char *command = (char *)malloc(sizeof(char) * MAXDATASIZE);
+    char *opt = (char *)malloc(sizeof(char) * 10);
+    if (atoi(op) == 3){
+        strcpy(opt, "1");
+    }else{
+        strcpy(opt, op);
+    }
+    strcpy(command, opt);
+    strcat(command, "#-");
+    // printf("comando enviado: %s\n", command);
+    return command;
+}
 
 int main(int argc, char *argv[])
 {
@@ -57,7 +85,6 @@ int main(int argc, char *argv[])
     char buf[MAXDATASIZE];
     struct hostent *he;
     struct sockaddr_in their_addr; // información de la dirección de destino 
-    //printf("argc: %d", argc);
 
     if (argc != 2) {
         fprintf(stderr,"usage: client hostname\n");
@@ -68,6 +95,7 @@ int main(int argc, char *argv[])
         perror("gethostbyname");
         exit(1);
     }
+
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         perror("socket");
         exit(1);
@@ -92,48 +120,37 @@ int main(int argc, char *argv[])
     buf[numbytes] = '\0';
 
     printf("Conected: %s", buf);
-    //printf("comando enviado: %s\n", argv[2]);
-    //id_operacion#nombre-archivo-a-eliminar
+
     while (1){
         char *command = (char *)malloc(sizeof(char) * MAXDATASIZE);
         char *op = (char *)malloc(sizeof(char) * 10);
-        char *opt = (char *)malloc(sizeof(char) * 10);
-        char buf[MAXDATASIZE];
+        char buf[MAX_RESPONSE_SIZE];
 
-        printf("\n\n****************************\n");
-        printf("    Escoja una opción\n\n");
-        printf("1)Listar archivos\n2)Subir archivo\n3)Eliminar archivo\n0) Para salir\n");
-        printf("\nSu opción:");
-        scanf("%s", op);
-        printf("\n");
+        op = show_menu();
+        command = build_command(op);
 
-        if (atoi(op) == 3){
-            strcpy(opt, "1");
-        }else{
-            strcpy(opt, op);
-        }
-
-        strcat(command, opt);
-        strcat(command, "#-");
-        printf("comando enviado: %s\n", command);
-        
-        if (send(sockfd, command, 14, 0) == -1){
+        /*Se envía el comando correspondiente a la operación solicitada*/
+        if (send(sockfd, command, MAXDATASIZE-1, 0) == -1){
             perror("send");
         }
 
-        if ((numbytes=recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+        /*Se recibe la respuesta de la operación solicitada*/
+        if ((numbytes=recv(sockfd, buf, MAX_RESPONSE_SIZE-1, 0)) == -1) {
             perror("recv");
             exit(1);
         }
         buf[numbytes] = '\0';
 
+        /*Se analíza la operación solicitada para mostrar su resultado*/
         switch(atoi(op)){
-            case 0: printf("CHao mundo\n"); exit(0); break;
-            case 1: printf("Lista de archivos:\n");
-                printf("%s\n",buf);
+            case 0: printf("Chao mundo\n");
+                exit(0);
                 break;
-            case 2: printf("Archivo subido correctamente\n");
-                printf("%s\n",buf);
+            case 1: printf("Lista de archivos:\n");
+                printf("%s\n", buf);
+                break;
+            case 2: printf("Contenido del Archivo\n");
+                printf("%s\n", buf);
                 break;
             case 3: printf("Listado de Archivos a Eliminar\n");
                 char *name2 = (char *)malloc(sizeof(char) * 30);
@@ -149,19 +166,22 @@ int main(int argc, char *argv[])
                     perror("send");
                 }
 
-                printf("SEGUNDO COMANDO ENVIADO: %s\n", command2);
+                // printf("SEGUNDO COMANDO ENVIADO: %s\n", command2);
 
                 if ((numbytes=recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
                     perror("recv");
                     exit(1);
                 }
                 buf[numbytes] = '\0';
-                printf("El archivo %s ha sido borrado. \n", name2);
+                // printf("El archivo %s ha sido borrado. \n", name2);
                 printf("%s\n", buf);
 
                 break;
             default: printf("[ERROR] no se especificó una operación válida\n");
         }
+        free(command);
+        free(op);
+        // free(buf);
     }
     close(sockfd);
 
