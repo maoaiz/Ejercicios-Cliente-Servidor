@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
     while (1){
         char *command = (char *)malloc(sizeof(char) * MAXDATASIZE);
         char *op = (char *)malloc(sizeof(char) * 10);
-        char buf[MAX_RESPONSE_SIZE];
+        char *buf = (char *)malloc(sizeof(char) * MAX_RESPONSE_SIZE);
 
         op = show_menu();
         command = build_command(op);
@@ -181,8 +181,8 @@ int main(int argc, char *argv[])
         }
         free(command);
         free(op);
-        // free(buf);
     }
+    free(buf);
     close(sockfd);
 
     return 0;
