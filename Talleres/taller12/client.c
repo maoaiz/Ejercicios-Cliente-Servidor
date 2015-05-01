@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 
 
                 char *command2 = (char *)malloc(sizeof(char) * MAXDATASIZE);
-                strcat(command2, "3#");
+                strcpy(command2, "3#");
                 strcat(command2, name2);
 
 

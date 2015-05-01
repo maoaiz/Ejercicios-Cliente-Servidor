@@ -48,43 +48,48 @@ void sigchld_handler(int s){
 char * request(char buf[]){
     printf("\n***************<REQUEST>********************\n");
     printf("El cliente solicita: %s\n", buf);
-    
+
     /* <Decodificar el comando enviado desde el cliente> */
     int i;
     char * p;
-    char *array[2];
+    char *array[3];
     i = 0;
     p = strtok(buf,"#"); 
-    while (p != NULL)
-    {
+    while (p != NULL){
         array[i++] = p;
         p = strtok (NULL, "#");
     }
     /* </Decodificar el comando enviado desde el cliente> */
 
     char *resp = (char *)malloc(sizeof(char) * MAX_RESPONSE_SIZE);
+
+    printf("resto::%d\n", atoi(array[0]));
+
     switch(atoi(array[0])){
         case 0: printf("El cliente quiere irse...\n");
             resp = "exit";
-            return resp;
+            // return resp;
             break;
         case 1: printf("Operación: listar directorio\n");
-            // resp = show_dir("shared_files");
-            resp = show_dir_with_system("shared_files/");
+            resp = show_dir("shared_files");
+            // resp = show_dir_with_system("shared_files/");
             break;
         case 2: printf("Operación: subir archivo\n");
             resp = upload_file(array[1]);
             break;
         case 3: printf("Operación: eliminar archivo\n");
-            strcpy(resp, "shared_files/");
-            strcat(resp, array[1]);
-            resp = delete_file(resp);
+            // strcpy(resp, "shared_files/");
+            // strcat(resp, array[1]);
+            // delete_file(resp);
+            resp =  "Archivo borrado";
             break;
         default: printf("[ERROR] no se especificó una operación válida\n");
             resp = "error";
             return resp;
     }
     printf("******************</REQUEST>***************\n");
+    // free(array[0]);
+    // free(array[1]);
     return resp;
 }
 
@@ -143,9 +148,11 @@ int main(void){
                 perror("send");
             int b;
             b = 1;
+            char buf[MAXDATASIZE];
+            char *response = (char *)malloc(sizeof(char) * MAX_RESPONSE_SIZE);
+            response = "Null";
             while(b == 1){
-                char buf[MAXDATASIZE];
-                printf("Escuchando al cliente...\n");
+                printf("Escuchando al cliente...\n%s", response);
                 if ((numbytes=recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
                     perror("recv");
                     exit(1);
@@ -153,7 +160,6 @@ int main(void){
                 buf[numbytes] = '\0';
                 printf("COMANDO SOLICITADO: %s\n", buf);
 
-                char *response = (char *)malloc(sizeof(char) * MAX_RESPONSE_SIZE);
                 response = request(buf);
                 if (response == "exit"){
                     b = 0;
@@ -163,10 +169,10 @@ int main(void){
                     response = "[ERROR] No existe esa operación\0";
                 }
 
-                printf("Response: %s\n", response);
+                // printf("Response: %s\n", response);
                 if (send(new_fd, response, MAX_RESPONSE_SIZE-1, 0) == -1)
                     perror("send");
-
+                response = "";
             }
             close(new_fd);
             exit(0);

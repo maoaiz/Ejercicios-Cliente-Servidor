@@ -59,9 +59,6 @@ char * show_dir(char * path){
     }
     // Cerramos el directorio
     closedir(my_path);
-
-    printf("show_dir\n");
-    system("ls -l shared_files/");
     return buf;
 }
 
@@ -72,12 +69,12 @@ char * upload_file(char * path){
 }
 
 
-char * delete_file(char * path){
-    printf("ELIMINANDO EL ARCHIVO: %s...............\n", path);
+void delete_file(char * path){
+    // printf("ELIMINANDO EL ARCHIVO: %s...............\n", path);
     char *command = (char *)malloc(sizeof(char) * 100);
     strcpy(command, "rm -f ");
     strcat(command, path);
     printf("Command executed: %s\n", command);
     system(command);
-    return "Archivo borrado.";
+    // return 0;
 }
