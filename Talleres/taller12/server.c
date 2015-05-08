@@ -49,48 +49,48 @@ char * request(char buf[]){
     printf("\n***************<REQUEST>********************\n");
     printf("El cliente solicita: %s\n", buf);
 
-    /* <Decodificar el comando enviado desde el cliente> */
+    /* <Decodificar el comando enviado desde el cliente ej: 3#prueba.txt> */
     int i;
     char * p;
-    char *array[3];
+    char *operands[3];
     i = 0;
     p = strtok(buf,"#"); 
     while (p != NULL){
-        array[i++] = p;
+        operands[i++] = p;
         p = strtok (NULL, "#");
     }
     /* </Decodificar el comando enviado desde el cliente> */
 
-    char *resp = (char *)malloc(sizeof(char) * MAX_RESPONSE_SIZE);
+    char *response = (char *)malloc(sizeof(char) * MAX_RESPONSE_SIZE);
 
-    printf("resto::%d\n", atoi(array[0]));
-
-    switch(atoi(array[0])){
-        case 0: printf("El cliente quiere irse...\n");
-            resp = "exit";
-            // return resp;
+    switch(atoi(operands[0])){
+        case 0:
+            printf("El cliente quiere irse...\n");
+            response = "exit";
             break;
-        case 1: printf("Operación: listar directorio\n");
-            resp = show_dir("shared_files");
-            // resp = show_dir_with_system("shared_files/");
+        case 1:
+            printf("Operación: listar directorio\n");
+            response = show_dir("shared_files");
+            // response = show_dir_with_system("shared_files/");
             break;
-        case 2: printf("Operación: subir archivo\n");
-            resp = upload_file(array[1]);
+        case 2:
+            printf("Operación: subir archivo\n");
+            response = upload_file(operands[1]);
             break;
-        case 3: printf("Operación: eliminar archivo\n");
-            // strcpy(resp, "shared_files/");
-            // strcat(resp, array[1]);
-            // delete_file(resp);
-            resp =  "Archivo borrado";
+        case 3:
+            printf("Operación: eliminar archivo\n");
+            strcpy(response, "shared_files/");
+            strcat(response, operands[1]);
+            delete_file(response);
+            printf("Borrando archivo...\n");
+            response =  "Archivo borrado";
             break;
-        default: printf("[ERROR] no se especificó una operación válida\n");
-            resp = "error";
-            return resp;
+        default: printf("[ERROR] no se solicitó una operación válida\n");
+            response = "error";
+            return response;
     }
     printf("******************</REQUEST>***************\n");
-    // free(array[0]);
-    // free(array[1]);
-    return resp;
+    return response;
 }
 
 int main(void){
@@ -144,7 +144,7 @@ int main(void){
         printf("server: got connection from %s\n", inet_ntoa(their_addr.sin_addr));
         if (!fork()) { // Este es el proceso hijo
             close(sockfd); // El hijo no necesita este descriptor
-            if (send(new_fd, "Bienvenido!\n", 14, 0) == -1)
+            if (send(new_fd, "Bienvenido!", 14, 0) == -1)
                 perror("send");
             int b;
             b = 1;
@@ -158,9 +158,12 @@ int main(void){
                     exit(1);
                 }
                 buf[numbytes] = '\0';
-                printf("COMANDO SOLICITADO: %s\n", buf);
+                printf("Procesando el comando: %s\n", buf);
 
                 response = request(buf);
+
+                printf("Response: '%s'\n", response);
+
                 if (response == "exit"){
                     b = 0;
                     break;
@@ -169,7 +172,6 @@ int main(void){
                     response = "[ERROR] No existe esa operación\0";
                 }
 
-                // printf("Response: %s\n", response);
                 if (send(new_fd, response, MAX_RESPONSE_SIZE-1, 0) == -1)
                     perror("send");
                 response = "";
